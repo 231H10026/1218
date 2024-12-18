@@ -1,0 +1,76 @@
+ <title>festivals in Kumagaya city</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.0/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+       
+    </style>
+</head>
+<body>
+  
+    <div id="map"></div>
+    <input type="file" id="csvFile" accept=".csv">
+
+    <script src="https://unpkg.com/leaflet@1.3.0/dist/leaflet.js"></script>
+    <script>
+        // 地図の初期化
+        const map = L.map('map').setView([36.1394602, 139.3902974], 13);
+        
+        // OpenStreetMapのタイルレイヤーを追加
+        L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
+        attribution: "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>"
+        }).addTo(map);
+
+        // CSVファイル読み込み処理
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const csvData = event.target.result;
+                processData(csvData);
+            };
+            
+            reader.readAsText(file);
+          
+        });
+
+        // CSVデータの処理とマーカー配置
+        function processData(csv) {
+            const lines = csv.split('\n');
+            const headers = lines[0].split(',');
+            
+            // ヘッダーの列インデックスを取得
+            const latIndex = headers.indexOf('latitude');
+            const lngIndex = headers.indexOf('longitude');
+            const nameIndex = headers.indexOf('name');
+            const descIndex = headers.indexOf('description');
+            
+            // 1行目（ヘッダー）を除いてデータを処理
+            for(let i = 1; i < lines.length; i++) {
+                if(lines[i].trim() === '') continue;
+                
+                const data = lines[i].split(',');
+                const lat = parseFloat(data[latIndex]);
+                const lng = parseFloat(data[lngIndex]);
+                const name = data[nameIndex];
+                const desc = data[descIndex];
+                
+                if(!isNaN(lat) && !isNaN(lng)) {
+                    // マーカーを作成し、ポップアップを追加
+                    const marker = L.marker([lat, lng]).addTo(map);
+                    marker.bindPopup(`
+                        <div class="info-content">
+                            <h3>${name}</h3>
+                            <p>${desc}</p>
+                        </div>
+                    `);
+                    
+                }
+            }
+        }
+    </script>
+</body>
+</html>
